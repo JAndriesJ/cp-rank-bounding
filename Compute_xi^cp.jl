@@ -7,8 +7,8 @@ include("Make_xi^cp_constraints.jl")
 """This is where the ξₜᶜᵖ is calculated for matrix M """
 function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
     n = size(M)[1]
-    MomMatExp  = GenMomMatDict(n, t)
-    MonBase = GenMon(n, t)
+    MomMatExp  = make_mom__expo_mat_dict(n, t)
+    MonBase = make_mon_expo(n, t)
     nb_mon = size(MonBase)[1]
 
     ## Begin making the model
@@ -22,7 +22,7 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
     @SDconstraint(model, MomMat >= zeros(nb_mon, nb_mon))
 
 ## Localizing constraints (recall the form of g in the qudratic module)
-    LMB = GenMon(n, t - 1)
+    LMB = make_mon_expo(n, t - 1)
     LMB_nb  = size(LMB)[1]
 
 
@@ -32,10 +32,10 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
 
 ## Second order Moment constraints
     for k in 1:n
-        eₖ = standardBase(n,k)
+        eₖ = get_standard_base(n,k)
         @constraint(model, x[transpose(2*eₖ)]  == M[k,k])
         for h in (k+1):n
-            eₕ  = standardBase(n,h)
+            eₕ  = get_standard_base(n,h)
             @constraint(model, x[transpose(eₖ + eₕ)]  == M[k,h])
         end
     end
@@ -43,10 +43,10 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
 ## Localizing g constriant
     LocConDict = genCP_localizing_Constriaints(M,LMB,x)
     for k in 1:n
-        eₖ = standardBase(n,k)
+        eₖ = get_standard_base(n,k)
         @SDconstraint(model, LocConDict[(k,k)] >= ZMonByMon )
         for h in (k+1):n
-            eₕ  = standardBase(n,h)
+            eₕ  = get_standard_base(n,h)
             @SDconstraint(model, LocConDict[(k,h)] >= ZMonByMon)
         end
     end
@@ -70,10 +70,10 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
         # end
 
         for k in 1:n
-            eₖ = standardBase(n,k)
+            eₖ = get_standard_base(n,k)
             @constraint(model, DagConDict[(k,k)]  .>= 0)
             for h in (k+1):n
-                eₕ  = standardBase(n,h)
+                eₕ  = get_standard_base(n,h)
                 @constraint(model, DagConDict[(k,h)]  .>= 0)
             end
         end
@@ -83,11 +83,11 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
     if isXX
         println("----------------XX constraints are active")
         for k in 1:n
-            eₖ = standardBase(n,k)
+            eₖ = get_standard_base(n,k)
                 LocConXXDict          = genCP_XX_Constriaints(M,LMB,x)
                 @SDconstraint(model, LocConXXDict[(k,k)] >= ZMonByMon )
             for h in (k+1):n
-                eₕ = standardBase(n,h)
+                eₕ = get_standard_base(n,h)
                 @SDconstraint(model, LocConXXDict[(k,h)] >= ZMonByMon )
             end
         end
@@ -99,13 +99,24 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
     elseif GtensL == 1
         println("----------------Weak tensor-constraints are active")
         WeakGTensLConsDict = genCPweakGTensLCons(M,t,x)
-        for key in keys(WeakGTensLConsDict)
-           @SDconstraint(model, WeakGTensLConsDict[key] >= zeros(size(WeakGTensLConsDict[key])))
-        end
+        @SDconstraint(model, WeakGTensLConsDict[0] >= zeros(size(WeakGTensLConsDict[0])))
+        @SDconstraint(model, WeakGTensLConsDict[1] >= zeros(size(WeakGTensLConsDict[1])))
+        # for key in keys(WeakGTensLConsDict)
+           # @SDconstraint(model, WeakGTensLConsDict[key] >= zeros(size(WeakGTensLConsDict[key])))
+        # end
 
     elseif GtensL == 2
         println("----------------Tensor-constraints are active")
-        GTensLConsMat       = MakeGTensLConsMat(LocConDict, M, LMB)
+        GTensLConsMat       = MakeGTensLConsMat1(LocConDict, M, LMB,x)
+        #GTensLConsMat       = MakeGTensLConsMat(M,t,x)
+        # for i in 1:8
+        #     for j in 1:8
+        #             if GTensLConsMat[i,j] != GTensLConsMat[i,j]
+        #                 println("$i,$j")
+        #             end
+        #     end
+        # end
+
         @SDconstraint(model, GTensLConsMat >= zeros(LMB_nb*n, LMB_nb*n))
     end
 
