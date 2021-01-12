@@ -4,7 +4,7 @@ using MosekTools # The solver that we use.
 include("moment_utils.jl")
 
 """L(gu) ≥ 0 for g ∈ {1} ∪ S^cp_A and u ∈ [x]2t−deg(g)"""
-function genCP_dagger_Constriaints(M,t,Lx)
+function genCP_dagger_Constraints(M,t,Lx)
     n = size(M)[1]
     DagConDict = Dict()
 
@@ -35,34 +35,34 @@ end
 
 """ L ≥ 0 on M₂ₜ(S^cp_A )
 (M_2t-2(gL) )_αβ =   √(Aᵢᵢ) x^(γ + eᵢ)  -  x^(γ + 2*eᵢ) M_2 or (M_2t-2(gL) )_αβ =   (Aᵢⱼ) x^γ   -  x^(γ + e₁ + eⱼ) """
-function genCP_localizing_Constriaints(M,LMB,x)
+function genCP_localizing_Constraints(M,LMB,x)
     n = size(M)[1]
     nb_mon  = size(LMB)[1]
     LocConDict = Dict()
     for k in 1:n
         eₖ = get_standard_base(n,k)
-        # Constriant: diagonal of L ≧ 0 on 𝑀(Sᶜᵖ)   : M((√Aₖₖ xₖ - xₖ²)⋅L)
+        # Constraint: diagonal of L ≧ 0 on 𝑀(Sᶜᵖ)   : M((√Aₖₖ xₖ - xₖ²)⋅L)
         LocConDict[(k,k)] = [sqrt(M[k,k])*x[tra(LMB[i,:] + LMB[j,:] + eₖ)] - x[tra(LMB[i,:] + LMB[j,:] + 2*eₖ)] for i in 1:nb_mon, j in 1:nb_mon ]
         for h in (k+1):n
             eₕ = get_standard_base(n,h)
-            # Constriant: off diagonal of L ≧ 0 on 𝑀(Sᶜᵖ)   : M((Aₖₕ - xₖxₕ)⋅L)
+            # Constraint: off diagonal of L ≧ 0 on 𝑀(Sᶜᵖ)   : M((Aₖₕ - xₖxₕ)⋅L)
             LocConDict[(k,h)] = [ M[k,h]*x[tra(LMB[i,:] + LMB[j,:])] - x[tra(LMB[i,:] + LMB[j,:] + eₖ + eₕ) ] for i in 1:nb_mon,  j in 1:nb_mon ]
         end
     end
     return LocConDict
 end
 
-function genCP_XX_Constriaints(M,LMB,x)
+function genCP_XX_Constraints(M,LMB,x)
     n = size(M)[1]
     nb_mon  = size(LMB)[1]
     XXConDict = Dict()
     for k in 1:n
         eₖ = get_standard_base(n,k)
-        # Localizing xx constriant: M(xₖ²⋅L)
+        # Localizing xx constraint: M(xₖ²⋅L)
         XXConDict[(k,k)] = [ x[tra(LMB[i,:] + LMB[j,:] + 2*eₖ ) ] for i in 1:nb_mon, j in 1:nb_mon ]
         for h in (k+1):n
             eₕ = get_standard_base(n,h)
-            # Localizing xx constriant: M(xₖxₕ⋅L)
+            # Localizing xx constraint: M(xₖxₕ⋅L)
             XXConDict[(k,h)] = [ x[tra(LMB[i,:] + LMB[j,:] + eₖ + eₕ ) ] for i in 1:nb_mon, j in 1:nb_mon ]
         end
     end
@@ -113,33 +113,38 @@ function assemble_dict(dict_of_blocks)
     end
     return block
 end
-
+"""
+Input: M,t,x
+Output: L((M-([x]₌₁[x]₌₁ᵀ))⊗([x]₌ₗ[x]₌ₗᵀ)))
+= M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ))
+for l ∈ 0,1,...,t-1.
+"""
 function genCPweakGTensLCons(M,t,x)
     n = size(M)[1]
     weakGTensLCons = Dict()
     LMBexp_1 =  make_mon_expo_mat(n,1,false)
     for ℓ in 0:(t-1)
-        LMBexp_ℓ          = make_mon_expo_mat(n,ℓ,false)
+        LMBexp_ℓ          = make_mon_expo_mat(n,ℓ,false) #exponents of [x]₌ₗ[x]₌ₗᵀ
         LMBexp_1ℓ_dict    = var_kron(LMBexp_1,LMBexp_ℓ)
-        LMBexp_1ℓ         = assemble_dict(LMBexp_1ℓ_dict)
-        LMB_ℓ             = index_to_var(x,LMBexp_ℓ)
-        LMB_1ℓ            = index_to_var(x,LMBexp_1ℓ)
-        weakGTensLCons[ℓ] = kron(M,LMB_ℓ) - LMB_1ℓ
+        LMBexp_1ℓ         = assemble_dict(LMBexp_1ℓ_dict) #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
+        LMB_ℓ             = index_to_var(x,LMBexp_ℓ)      # L([x]₌ₗ[x]₌ₗᵀ)
+        LMB_1ℓ            = index_to_var(x,LMBexp_1ℓ)     # L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ))
+        weakGTensLCons[ℓ] = kron(M,LMB_ℓ) - LMB_1ℓ # M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
     end
     return weakGTensLCons
 end
 
 function MakeGTensLConsMat(M,t,Lx)
     n = size(M)[1]
-    LMBexp_1          = make_mon_expo_mat(n,1,false)
-    LMBexp_t          = make_mon_expo_mat(n,1,true)
-    LMB_t             = index_to_var(Lx,LMBexp_t)
+    LMBexp_1          = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
+    LMBexp_t          = make_mon_expo_mat(n,1,true) #exponents of [x]ₜ[x]ₜᵀ
+    LMB_t             = index_to_var(Lx,LMBexp_t) #L([x]ₜ[x]ₜᵀ)
 
-    LMBexp_1t_dict    = var_kron(LMBexp_1,LMBexp_t)
+    LMBexp_1t_dict    = var_kron(LMBexp_1,LMBexp_t) #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
     LMBexp_1t         = assemble_dict(LMBexp_1t_dict)
-    LMB_1t            = index_to_var(Lx,LMBexp_1t)
+    LMB_1t            = index_to_var(Lx,LMBexp_1t) # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ))
 
-    GTensLCons = kron(M,LMB_t) - LMB_1t
+    GTensLCons = kron(M,LMB_t) - LMB_1t # M⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ)
     return GTensLCons
 end
 
@@ -153,7 +158,7 @@ function MakeGTensLConsMat1(LocConDict, M, LMB,x)
     WeakGTensLConsDict = Dict()
     for k in 1:n
         eₖ = get_standard_base(n,k)
-        # Diagonal blocks of the constriants:  M((Aₖₖ - xₖ²)⋅L)
+        # Diagonal blocks of the constraints:  M((Aₖₖ - xₖ²)⋅L)
         WeakGTensLConsDict[k] = [ M[k,k]*x[tra(LMB[i,:] + LMB[j,:])] - x[tra(LMB[i,:] + LMB[j,:] + 2*eₖ)] for i in 1:nb_mon, j in 1:nb_mon ]
     end
 
@@ -217,17 +222,12 @@ end
 
 
 
-
-
-
-
-
 """This is never used """
 function genCPCons(M,LMB,x)
     n = size(M)[1]
-    LocConDict            = genCP_localizing_Constriaints(M,LMB,x)
-    DagConDict            = genCP_dagger_Constriaints(M,LMB,x)
-    LocConXXDict          = genCP_XX_Constriaints(M,LMB,x)
+    LocConDict            = genCP_localizing_Constraints(M,LMB,x)
+    DagConDict            = genCP_dagger_Constraints(M,LMB,x)
+    LocConXXDict          = genCP_XX_Constraints(M,LMB,x)
 
     weakGTensLConsMat     = genCPweakGTensLCons(M,LMB,x)
     GTensLConsMat         = MakeGTensLConsMat(LocConDict, weakGTensLConsMat, n)

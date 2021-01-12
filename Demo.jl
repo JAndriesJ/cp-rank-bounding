@@ -15,7 +15,7 @@ include("Make_xi^cp_constraints.jl")
 include("Compute_xi^cp.jl")
 
 
-a,b,c,d,e = (0,0,0,1,0)
+a,b,c,d,e = (0,0,0,0,0)
 loadPath = "C:\\Users\\andries\\all-my-codes\\cp-rank-bounding\\Data\\CPmats\\M7.txt"
 
 if 1 == a
@@ -186,17 +186,6 @@ if 1 == d
 end
 
 
-include("Compute_xi^cp.jl")
-
-WeakGTensLConsDict = genCPweakGTensLCons(M,t,Lx)
-
-LMB           = make_mon_expo(n, t - 1)
-LocConDict    = genCP_localizing_Constriaints(M,LMB,Lx)
-GTensLConsMat = MakeGTensLConsMat(LocConDict, M, LMB,Lx)
-
-ξₜweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 1,false)
-ξₜTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 2,false)
-
 
 
 
@@ -206,27 +195,58 @@ GTensLConsMat = MakeGTensLConsMat(LocConDict, M, LMB,Lx)
 ## moments
 
 ## load a matrix:
+cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
+loadPath = "C:\\Users\\andries\\.julia\\dev\\CP-Rank-Bounding\\Data\\CPmats\\"*cp_mats[3]
 M = mat_repo.loadMatfromtxt(loadPath)
 t = 2
 n = size(M)[1]
+# include("Compute_xi^cp.jl")
+
+
+MomMatExp    = make_mom__expo_mat_dict(n, t)
+MonBaseₜ     = make_mon_expo(n, t)
+model        = Model(Mosek.Optimizer)
+list_of_keys = [key for key in keys(MomMatExp) ]
+@variable(model,Lx[list_of_keys] )
+
+
+A             = MakeGTensLConsMat(M,t,Lx)
+
+LMB           = make_mon_expo(n, t - 1)
+LocConDict    = genCP_localizing_Constriaints(M,LMB,Lx)
+B             = MakeGTensLConsMat1(LocConDict, M, LMB,Lx)
+for i in 1:8
+    for j in 1:8
+            if A[i,j] != B[i,j]
+                println("$i,$j")
+            end
+    end
+end
+for j in 1:8
+    if A[:,j] != B[:,j]
+        println(":,$j")
+    end
+end
+
+
+A == B
+
+
+
+
+# ξₜweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 1,false)
+# ξₜTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 2,false)
+
 
 
 
 #if 1 == 1
 
-# cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
-# #rand_cp_mats = ["1 R n7 r6.txt"    "14 R n6 r4.txt"   "19 R n6 r15.txt"  "5 R n8 r26.txt" '10 R n9 r28.txt' ]
-#
-# loadPath = "C:\\Users\\andries\\.julia\\dev\\CP-Rank-Bounding\\Data\\CPmats\\"*cp_mats[3]
 # M = mat_repo.loadMatfromtxt(loadPath)
 # t  = 2
 # n = size(M)[1]
 #
-# MomMatExp  = make_mom__expo_mat_dict(n, t)
-# MonBaseₜ    = make_mon_expo(n, t)
-# model      = Model(Mosek.Optimizer)
-# list_of_keys = [key for key in keys(MomMatExp) ]
-# @variable(model,Lx[list_of_keys] )
+
 #
 # MonBaseₜ₋₁ = make_mon_expo(n, t-1)
 #

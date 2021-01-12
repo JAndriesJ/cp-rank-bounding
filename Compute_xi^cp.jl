@@ -40,8 +40,8 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
         end
     end
 
-## Localizing g constriant
-    LocConDict = genCP_localizing_Constriaints(M,LMB,x)
+## Localizing g constraint
+    LocConDict = genCP_localizing_Constraints(M,LMB,x)
     for k in 1:n
         eₖ = get_standard_base(n,k)
         @SDconstraint(model, LocConDict[(k,k)] >= ZMonByMon )
@@ -54,7 +54,7 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
 ## Dagger constraints
     if isDag
         println("----------------Dagger constraints are active")
-        DagConDict  = genCP_dagger_Constriaints(M,t,x)
+        DagConDict  = genCP_dagger_Constraints(M,t,x)
                 # MISTAKE
         # for k in 1:n
         #     eₖ = standardBase(n,k)
@@ -79,12 +79,12 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
         end
     end
 
-    # Localizing XX constriant
+    # Localizing XX constraint
     if isXX
         println("----------------XX constraints are active")
         for k in 1:n
             eₖ = get_standard_base(n,k)
-                LocConXXDict          = genCP_XX_Constriaints(M,LMB,x)
+                LocConXXDict          = genCP_XX_Constraints(M,LMB,x)
                 @SDconstraint(model, LocConXXDict[(k,k)] >= ZMonByMon )
             for h in (k+1):n
                 eₕ = get_standard_base(n,h)
