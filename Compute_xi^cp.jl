@@ -99,25 +99,18 @@ function Computeξₜᶜᵖ(M,t , isDag , GtensL, isXX )
     elseif GtensL == 1
         println("----------------Weak tensor-constraints are active")
         WeakGTensLConsDict = genCPweakGTensLCons(M,t,x)
-        @SDconstraint(model, WeakGTensLConsDict[0] >= zeros(size(WeakGTensLConsDict[0])))
-        @SDconstraint(model, WeakGTensLConsDict[1] >= zeros(size(WeakGTensLConsDict[1])))
-        # for key in keys(WeakGTensLConsDict)
-           # @SDconstraint(model, WeakGTensLConsDict[key] >= zeros(size(WeakGTensLConsDict[key])))
-        # end
+        #@SDconstraint(model, WeakGTensLConsDict[0] >= zeros(size(WeakGTensLConsDict[0])))
+        #@SDconstraint(model, WeakGTensLConsDict[1] >= zeros(size(WeakGTensLConsDict[1])))
+        for key in keys(WeakGTensLConsDict)
+           @SDconstraint(model, WeakGTensLConsDict[key] >= zeros(size(WeakGTensLConsDict[key])))
+        end
 
     elseif GtensL == 2
         println("----------------Tensor-constraints are active")
-        GTensLConsMat       = MakeGTensLConsMat1(LocConDict, M, LMB,x)
-        #GTensLConsMat       = MakeGTensLConsMat(M,t,x)
-        # for i in 1:8
-        #     for j in 1:8
-        #             if GTensLConsMat[i,j] != GTensLConsMat[i,j]
-        #                 println("$i,$j")
-        #             end
-        #     end
-        # end
+        #GTensLConsMat       = MakeGTensLConsMat1(LocConDict, M, LMB,x)
+        GTensLConsMat       = MakeGTensLConsMat(M,t-1,x)
 
-        @SDconstraint(model, GTensLConsMat >= zeros(LMB_nb*n, LMB_nb*n))
+        @SDconstraint(model, GTensLConsMat >= zeros(size(GTensLConsMat)))
     end
 
     #  Set objective

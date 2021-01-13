@@ -15,7 +15,7 @@ include("Make_xi^cp_constraints.jl")
 include("Compute_xi^cp.jl")
 
 
-a,b,c,d,e = (0,0,0,0,0)
+a,b,c,d,e = (1,1,1,0,0)
 loadPath = "C:\\Users\\andries\\all-my-codes\\cp-rank-bounding\\Data\\CPmats\\M7.txt"
 
 if 1 == a
@@ -166,8 +166,6 @@ if 1 == c
     end
 end
 
-
-
 LocConDict = genCP_localizing_Constraints(M,MonBaseₜ₋₁,Lx)
 
 # Test Computeξₜᶜᵖ for example matrices.
@@ -191,12 +189,6 @@ if 1 == d
 end
 
 
-
-
-
-
-
-
 ## moments
 
 ## load a matrix:
@@ -206,17 +198,13 @@ M = mat_repo.loadMatfromtxt(loadPath)
 
 t = 2
 n = size(M)[1]
-# include("Compute_xi^cp.jl")
-
-
-
+include("Compute_xi^cp.jl")
 
 ξ₂ᶜᵖ           = Computeξₜᶜᵖ(M, t, false,0,false)
 ξ₂ᵩᶜᵖ          = Computeξₜᶜᵖ(M, t, true, 0,false)
 ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 0, true)
-ξₜweakTensᶜᵖ   = Computeξₜᶜᵖ(M, t, false, 1,false)
-ξₜTensᶜᵖ       = Computeξₜᶜᵖ(M, t, false, 2,false)
-
+ξₜweakTensᶜᵖ     = Computeξₜᶜᵖ(M, t, false, 1,false)
+ξₜTensᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 2,false)
 ξₜᵩweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
 ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
 ξ₂ᵩTensₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
@@ -224,12 +212,6 @@ n = size(M)[1]
 
 
 
-# MomMatExp    = make_mom__expo_mat_dict(n, t)
-# MonBaseₜ     = make_mon_expo(n, t)
-# model        = Model(Mosek.Optimizer)
-# list_of_keys = [key for key in keys(MomMatExp) ]
-# @variable(model,Lx[list_of_keys] )
-#
 #
 # A             = MakeGTensLConsMat(M,t,Lx)
 #

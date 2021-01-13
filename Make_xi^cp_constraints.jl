@@ -83,74 +83,114 @@ function index_to_var(var, index_array)
     return var_array
 end
 
-function assemble_dict(dict_of_blocks)
-    n = Int(sqrt(length(keys(dict_of_blocks))))
-    # check if this is integer.
-    if n == 1
-        return dict_of_blocks[1,1]
-    end
-    block = []
-    row_block = []
-    for i in 1:n
-        for j in 1:n
-            if j == 1
-                row_block = dict_of_blocks[i, j]
-                # if j == i
-                #     row_block = dict_of_blocks[1,1]
-                # else
-
-                # end
-            else
-                row_block = hcat(row_block, dict_of_blocks[i,j])
-            end
-
-        end
-        # Just the first row
-        if i == 1
-            block = row_block
-        elseif i > 1
-            block = vcat(block, row_block)
-        end
-    end
-    return block
-end
+# function assemble_dict(dict_of_blocks)
+#     n = Int(sqrt(length(keys(dict_of_blocks))))
+#     # check if this is integer.
+#     if n == 1
+#         return dict_of_blocks[1,1]
+#     end
+#     block = []
+#     row_block = []
+#     for i in 1:n
+#         for j in 1:n
+#             if j == 1
+#                 row_block = dict_of_blocks[i, j]
+#                 # if j == i
+#                 #     row_block = dict_of_blocks[1,1]
+#                 # else
+#
+#                 # end
+#             else
+#                 row_block = hcat(row_block, dict_of_blocks[i,j])
+#             end
+#
+#         end
+#         # Just the first row
+#         if i == 1
+#             block = row_block
+#         elseif i > 1
+#             block = vcat(block, row_block)
+#         end
+#     end
+#     return block
+# end
 """
 Input: M,t,x
 Output: L((M-([x]₌₁[x]₌₁ᵀ))⊗([x]₌ₗ[x]₌ₗᵀ)))
 = M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ))
 for l ∈ 0,1,...,t-1.
 """
-function genCPweakGTensLCons(M,t,x)
+function genCPweakGTensLCons(M,t,Lx)
     n = size(M)[1]
     weakGTensLCons = Dict()
     LMBexp_1 =  make_mon_expo_mat(n,1,false)
     for ℓ in 0:(t-1)
-        LMBexp_ℓ          = make_mon_expo_mat(n,ℓ,false) #exponents of [x]₌ₗ[x]₌ₗᵀ
-        LMBexp_1ℓ_dict    = var_kron(LMBexp_1,LMBexp_ℓ)
-        LMBexp_1ℓ         = assemble_dict(LMBexp_1ℓ_dict) #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
-        LMB_ℓ             = index_to_var(x,LMBexp_ℓ)      # L([x]₌ₗ[x]₌ₗᵀ)
-        LMB_1ℓ            = index_to_var(x,LMBexp_1ℓ)     # L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ))
-        weakGTensLCons[ℓ] = kron(M,LMB_ℓ) - LMB_1ℓ # M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
+        LMBexp_ℓ          = make_mon_expo_mat(n,ℓ,false)   #exponents of [x]₌ₗ[x]₌ₗᵀ
+        LMBexp_1ℓ         = var_kron(LMBexp_1,LMBexp_ℓ)    #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
+        LMB_ℓ             = index_to_var(Lx,LMBexp_ℓ)      # L([x]₌ₗ[x]₌ₗᵀ)
+        LMB_1ℓ            = index_to_var(Lx,LMBexp_1ℓ)     # L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ))
+
+        M_tens_LMB_ℓ      = kron(M,LMB_ℓ)                  # M⊗L([x]₌ₗ[x]₌ₗᵀ)
+        weakGTensLCons[ℓ] = M_tens_LMB_ℓ - LMB_1ℓ         # M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
     end
     return weakGTensLCons
 end
-
+"""M(G ⊗ L) ⪰ 0 constraints"""
 function MakeGTensLConsMat(M,t,Lx)
     n = size(M)[1]
     LMBexp_1          = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
-    LMBexp_t          = make_mon_expo_mat(n,1,true) #exponents of [x]ₜ[x]ₜᵀ
-    LMB_t             = index_to_var(Lx,LMBexp_t) #L([x]ₜ[x]ₜᵀ)
+    LMBexp_t          = make_mon_expo_mat(n,1,true)  #exponents of [x]ₜ[x]ₜᵀ
+    LMB_t             = index_to_var(Lx,LMBexp_t)    #L([x]ₜ[x]ₜᵀ)
 
-    LMBexp_1t_dict    = var_kron(LMBexp_1,LMBexp_t) #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
-    LMBexp_1t         = assemble_dict(LMBexp_1t_dict)
-    LMB_1t            = index_to_var(Lx,LMBexp_1t) # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ))
+    LMBexp_1t         = var_kron(LMBexp_1,LMBexp_t)  #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
+    LMB_1t            = index_to_var(Lx,LMBexp_1t)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ))
 
-    GTensLCons = kron(M,LMB_t) - LMB_1t # M⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ)
+    GTensLCons = kron(M,LMB_t) - LMB_1t              # M⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ)
     return GTensLCons
 end
 
+
+
+
+"""Not used becuase it takes too long"""
+function make_tens_constraint(M,t,Lx)
+    LMBexp_1          = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
+    LMBexp_11         = var_kron(LMBexp_1,LMBexp_1)
+    xxℓ               = var_self_kron(LMBexp_11,t)
+    Lxxℓ              = index_to_var(Lx,xxℓ) # L( ([x]₌₁[x]₌₁ᵀ)^⊗ℓ) for ℓ = 0,1,..,t
+    Mℓ                = self_kron(M,t)  # M^⊗ℓ for ℓ = 0,1,..,t)
+
+    tens_constraint = Dict()
+    for key in keys(Mℓ)
+        tens_constraint[key] = Mℓ[key] - Lxxℓ[key]
+    end
+    return tens_constraint
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # MakeGTensLConsMat(M,t,Lx) - MakeGTensLConsMat1(LocConDict, M, LMB,x)
-"""M(G ⊗ L) ⪰ 0 constraints"""
+"""Not used"""
 function MakeGTensLConsMat1(LocConDict, M, LMB,x)
     n = size(M)[1]
     nb_mon  = size(LMB)[1]
@@ -191,34 +231,6 @@ function MakeGTensLConsMat1(LocConDict, M, LMB,x)
     end
     return GCon
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 """This is never used """

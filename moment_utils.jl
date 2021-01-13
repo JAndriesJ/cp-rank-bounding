@@ -25,12 +25,26 @@ end #Has a quadratic loss in runtime because for degree t we compute degree 1 t 
 
 """Input: n,t output: exponents of [x]≦ₜ[x]≦ₜᵀ where , x = (x₁,x₂,...,xₙ)."""
 function make_mon_expo_mat(n,t,isLeq = true)
-    mon      = make_mon_expo(n,t, isLeq)
-    nb_mon   = size(mon)[1]
-    xxᵀₜ_vec = [ mon[i,:]  + mon[j,:] for i in 1:nb_mon for j in 1:nb_mon]
-    xxᵀₜ     = reshape(xxᵀₜ_vec, (nb_mon, nb_mon) )
+    if typeof(t) == Int64
+        t = (t,t)
+    end
+    #     mon      = make_mon_expo(n,t, isLeq)
+    #     nb_mon   = size(mon)[1]
+    #     xxᵀₜ_vec = [ mon[i,:]  + mon[j,:] for i in 1:nb_mon for j in 1:nb_mon]
+    #     xxᵀₜ     = reshape(xxᵀₜ_vec, (nb_mon, nb_mon) )
+    # elseif  t == Tuple{Int64,Int64}
+    mon1      = make_mon_expo(n,t[1], isLeq)
+    mon2      = make_mon_expo(n,t[2], isLeq)
+    nb_mon1   = size(mon1)[1]
+    nb_mon2   = size(mon2)[1]
+    xxᵀₜ_vec = [ mon1[i,:]  + mon2[j,:] for i in 1:nb_mon1 for j in 1:nb_mon2]
+    xxᵀₜ     = reshape(xxᵀₜ_vec, (nb_mon1, nb_mon2) )
+    # else
+    #     @warn "In correct level specification."
+    # end
     return xxᵀₜ
 end
+# @test make_mon_expo_mat(7,(1,1),true) == make_mon_expo_mat(7,1,true)
 
 
 """Input is a multi-index array N_t^n and α ∈ N_t^n, output is the row index of the
@@ -86,6 +100,42 @@ function get_standard_base(n,k)
 end
 
 
+"""Input: Dictionary:
+keys: i,j
+values: square arrays A_{i,j}
+Output: Array A = (A_{i,j})_i,j
+"""
+function assemble_dict(dict_of_blocks)
+    n = Int(sqrt(length(keys(dict_of_blocks))))
+    # check if this is integer.
+    if n == 1
+        return dict_of_blocks[1,1]
+    end
+    block = []
+    row_block = []
+    for i in 1:n
+        for j in 1:n
+            if j == 1
+                row_block = dict_of_blocks[i, j]
+                # if j == i
+                #     row_block = dict_of_blocks[1,1]
+                # else
+
+                # end
+            else
+                row_block = hcat(row_block, dict_of_blocks[i,j])
+            end
+
+        end
+        # Just the first row
+        if i == 1
+            block = row_block
+        elseif i > 1
+            block = vcat(block, row_block)
+        end
+    end
+    return block
+end
 
 ##
 function var_kron(A,B)
@@ -99,8 +149,19 @@ function var_kron(A,B)
             D[i,j] = B + C
         end
     end
-    return D
+    return assemble_dict(D)
 end
+
+function var_self_kron(A,ℓ)
+    A_tens = Dict()
+    A_tens[0] = A
+    for i in 1:ℓ
+        A_tens[i] = var_kron(A,A_tens[i-1])
+    end
+    return A_tens
+end
+
+
 # A = [ [[1 0 0 2 0 1 0]]  [[1 2 0 0 0 0 0]]  [[0 1 0 2 0 0 1]]  [[0 0 0 1 2 0 0]] ]
 # A = reshape(A,2,2)
 # B = [ [[1 0 0 2 0 1 0]]  [[1 0 0 2 0 1 0]]  [[1 0 0 2 0 1 0]]  [[1 0 0 2 0 1 0]] ]
