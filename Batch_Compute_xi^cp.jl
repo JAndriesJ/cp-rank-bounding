@@ -11,8 +11,8 @@ outputDir = main_dir*"cp-rank-bounding\\Output\\"
 function batchCompξ₂ᶜᵖ(loadName)
     counter = 1
     #colnames  = "Matrix,    cp-rank,    n²/4,  ξ₂ᶜᵖ,      ξ₂ᵩᶜᵖ,      ξ₂ᵩweak⊗ᶜᵖ,     ξ₂ᵩ⊗ᶜᵖ,    ξ₂ᵩ⊗ᶜᵖ + xᵢxⱼ"
-    Header1 = "|Matrix| cp-rank| n²/4| ξ₂ᶜᵖ|  ξ₂ᵩᶜᵖ| ξ₂weak⊗ᶜᵖ|ξ₂ᵩweak⊗ᶜᵖ| ξ₂⊗ᶜᵖ|ξ₂ᵩ⊗ᶜᵖ| ξ₂ᵩ⊗ᶜᵖ + xᵢxⱼ|"
-    Header2 = "|---|---|---|---|---|---|---|---|---|---|"
+    Header1 = "|Matrix| cp-rank| n²/4| ξ₂ᶜᵖ|  ξ₂ᵩᶜᵖ| ξ₂ₓₓᶜᵖ | ξ₂weak⊗ᶜᵖ|ξ₂ᵩweak⊗ᶜᵖ| ξ₂⊗ᶜᵖ|ξ₂ᵩ⊗ᶜᵖ| ξ₂ᵩ⊗ᶜᵖ + xᵢxⱼ|"
+    Header2 = "|---|---|---|---|---|---|---|---|---|---|---|"
     loadDir = dataDir*loadName*"\\"
     Matfiles =  cd(readdir, loadDir)
     open( outputDir*loadName*".md", "w") do f
@@ -33,19 +33,24 @@ function batchCompξ₂ᶜᵖ(loadName)
         #ξ₂ᶜᵖ, ξ₂ᵩᶜᵖ, ξ₂weakTensᶜᵖ,ξ₂ᵩweakTensᶜᵖ,ξ₂Tensᶜᵖ,ξ₂ᵩTensᶜᵖ, ξ₂ᵩTensₓₓᶜᵖ = compξᶜᵖ(M,2)
         #ξ₂ᶜᵖ, ξ₂ᵩᶜᵖ, ξ₂weakTensᶜᵖ,ξ₂Tensᶜᵖ = compξᶜᵖ_1(M,t)
         t = 2
-        ξ₂ᶜᵖ          =  Computeξₜᶜᵖ(M, t, false, 0,false)
-        ξ₂ᵩᶜᵖ         =  Computeξₜᶜᵖ(M, t, true,0,false)
-        ξ₂weakTensᶜᵖ  =  Computeξₜᶜᵖ(M, t, false, 1,false)
-        ξ₂Tensᶜᵖ      =  Computeξₜᶜᵖ(M, t, false, 2,false)
 
-        ξ₂ᵩweakTensᶜᵖ = NaN
-        ξ₂ᵩTensᶜᵖ     = NaN
-        ξ₂ᵩTensₓₓᶜᵖ   = NaN
+
+        ξ₂ᶜᵖ           = Computeξₜᶜᵖ(M, t, false,0,false)
+        ξ₂ᵩᶜᵖ          = Computeξₜᶜᵖ(M, t, true, 0,false)
+        ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 0, true)
+        ξₜweakTensᶜᵖ   = Computeξₜᶜᵖ(M, t, false, 1,false)
+        ξₜTensᶜᵖ       = Computeξₜᶜᵖ(M, t, false, 2,false)
+
+        ξₜᵩweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
+        ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
+        ξ₂ᵩTensₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
+
+
 
         # if ~(ξ₂ᶜᵖ <= ξ₂ᵩᶜᵖ<= ξ₂ᵩweakTensᶜᵖ<= ξ₂ᵩTensᶜᵖ<= ξ₂ᵩTensₓₓᶜᵖ)
         #     ord_vio = "Order-Violation-"
         # end
-        line = "|"*MatName*"| ___ | $n2d4| $ξ₂ᶜᵖ| $ξ₂ᵩᶜᵖ| $ξ₂weakTensᶜᵖ|$ξ₂ᵩweakTensᶜᵖ|$ξ₂Tensᶜᵖ|$ξ₂ᵩTensᶜᵖ|$ξ₂ᵩTensₓₓᶜᵖ | \n"
+        line = "|"*MatName*"| ___ | $n2d4| $ξ₂ᶜᵖ| $ξ₂ᵩᶜᵖ| $ξ₂ₓₓᶜᵖ |$ξ₂weakTensᶜᵖ|$ξ₂ᵩweakTensᶜᵖ|$ξ₂Tensᶜᵖ|$ξ₂ᵩTensᶜᵖ|$ξ₂ᵩTensₓₓᶜᵖ | \n"
         #write(f, MatName*", ___     ,$n2d4,       $ξ₂ᶜᵖ,      $ξ₂ᵩᶜᵖ,      $ξ₂ᵩweakTensᶜᵖ,     $ξ₂ᵩTensᶜᵖ,      $ξ₂ᵩTensₓₓᶜᵖ \n")
 
         open( outputDir*loadName*".md", "a") do f
@@ -86,7 +91,6 @@ end
 dataDir_lst =  ["CPmats", "randCPmats", "DDSNNmats","SNN_Mat"]
 for i in 1:1
     batchCompξ₂ᶜᵖ(dataDir_lst[i])
-    #batchCompStuff(dataDir_lst[i])
 end
 
 """TO DO: make a batch update """
@@ -94,8 +98,6 @@ end
 #
 # end
 
-
-M       = mat_repo.loadMatfromtxt("C:\\Users\\andries\\all-my-codes\\cp-rank-bounding\\Data\\CPmats\\M8tilde.txt")
 
 
 # if false

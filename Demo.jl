@@ -143,16 +143,16 @@ if 1 == c
 
 
     @testset "genCP_localizing_Constriaints" begin
-        LocConDict = genCP_localizing_Constriaints(M,MonBaseₜ₋₁,Lx)
+        LocConDict = genCP_localizing_Constraints(M,MonBaseₜ₋₁,Lx)
     end
 
     @testset "genCP_dagger_Constriaints" begin
-        DagConDict = genCP_dagger_Constriaints(M,t,Lx)
+        DagConDict = genCP_dagger_Constraints(M,t,Lx)
         @test length(keys(DagConDict)) == n*(n+1)/2 + 1
     end
 
     @testset "genCP_XX_Constriaints" begin
-        XXConDict = genCP_XX_Constriaints(M,MonBaseₜ₋₁,Lx)
+        XXConDict = genCP_XX_Constraints(M,MonBaseₜ₋₁,Lx)
     end
 
     @testset "genCPweakGTensLCons" begin
@@ -160,10 +160,15 @@ if 1 == c
     end
 
     @testset "genCPGTensLCons" begin
-        LocConDict = genCP_localizing_Constriaints(M,MonBaseₜ₋₁,Lx)
-        GTensLConsDict     = MakeGTensLConsMat(LocConDict, M, MonBaseₜ₋₁,Lx)
+        LocConDict = genCP_localizing_Constraints(M,MonBaseₜ₋₁,Lx)
+        GTensLConsDict     = MakeGTensLConsMat1(LocConDict, M, MonBaseₜ₋₁,Lx)
+        GTensLConsDict     = MakeGTensLConsMat(M,t,Lx)
     end
 end
+
+
+
+LocConDict = genCP_localizing_Constraints(M,MonBaseₜ₋₁,Lx)
 
 # Test Computeξₜᶜᵖ for example matrices.
 if 1 == d
@@ -198,63 +203,51 @@ end
 cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
 loadPath = "C:\\Users\\andries\\.julia\\dev\\CP-Rank-Bounding\\Data\\CPmats\\"*cp_mats[3]
 M = mat_repo.loadMatfromtxt(loadPath)
+
 t = 2
 n = size(M)[1]
 # include("Compute_xi^cp.jl")
 
 
-MomMatExp    = make_mom__expo_mat_dict(n, t)
-MonBaseₜ     = make_mon_expo(n, t)
-model        = Model(Mosek.Optimizer)
-list_of_keys = [key for key in keys(MomMatExp) ]
-@variable(model,Lx[list_of_keys] )
 
 
-A             = MakeGTensLConsMat(M,t,Lx)
+ξ₂ᶜᵖ           = Computeξₜᶜᵖ(M, t, false,0,false)
+ξ₂ᵩᶜᵖ          = Computeξₜᶜᵖ(M, t, true, 0,false)
+ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 0, true)
+ξₜweakTensᶜᵖ   = Computeξₜᶜᵖ(M, t, false, 1,false)
+ξₜTensᶜᵖ       = Computeξₜᶜᵖ(M, t, false, 2,false)
 
-LMB           = make_mon_expo(n, t - 1)
-LocConDict    = genCP_localizing_Constriaints(M,LMB,Lx)
-B             = MakeGTensLConsMat1(LocConDict, M, LMB,Lx)
-for i in 1:8
-    for j in 1:8
-            if A[i,j] != B[i,j]
-                println("$i,$j")
-            end
-    end
-end
-for j in 1:8
-    if A[:,j] != B[:,j]
-        println(":,$j")
-    end
-end
-
-
-A == B
+ξₜᵩweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
+ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
+ξ₂ᵩTensₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
 
 
 
 
-# ξₜweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 1,false)
-# ξₜTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 2,false)
-
-
-
-
-#if 1 == 1
-
-# M = mat_repo.loadMatfromtxt(loadPath)
-# t  = 2
+# MomMatExp    = make_mom__expo_mat_dict(n, t)
+# MonBaseₜ     = make_mon_expo(n, t)
+# model        = Model(Mosek.Optimizer)
+# list_of_keys = [key for key in keys(MomMatExp) ]
+# @variable(model,Lx[list_of_keys] )
+#
+#
+# A             = MakeGTensLConsMat(M,t,Lx)
+#
+# LMB           = make_mon_expo(n, t - 1)
+# LocConDict    = genCP_localizing_Constraints(M,LMB,Lx)
+# B             = MakeGTensLConsMat1(LocConDict, M, LMB,Lx)
+#
+#
+#
+#
+#
 # n = size(M)[1]
+# LMBexp_1          = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
+# LMBexp_t          = make_mon_expo_mat(n,1,true) #exponents of [x]ₜ[x]ₜᵀ
+# LMB_t             = index_to_var(Lx,LMBexp_t) #L([x]ₜ[x]ₜᵀ)
 #
-
+# LMBexp_1t_dict    = var_kron(LMBexp_1,LMBexp_t) #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
+# LMBexp_1t         = assemble_dict(LMBexp_1t_dict)
+# LMB_1t            = index_to_var(Lx,LMBexp_1t) # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ))
 #
-# MonBaseₜ₋₁ = make_mon_expo(n, t-1)
-#
-#
-#
-# LocConDict         = genCP_localizing_Constriaints(M,MonBaseₜ₋₁,Lx)
-# DagConDict         = genCP_dagger_Constriaints(M,t,Lx)
-# XXConDict          = genCP_XX_Constriaints(M,MonBaseₜ₋₁,Lx)
-#
-#
-# GTensLConsDict     = MakeGTensLConsMat(LocConDict, M, MonBaseₜ₋₁)
+# GTensLCons        = kron(M,LMB_t) - LMB_1t # M⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ)

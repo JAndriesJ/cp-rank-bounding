@@ -94,11 +94,12 @@ function assemble_dict(dict_of_blocks)
     for i in 1:n
         for j in 1:n
             if j == 1
-                if j == i
-                    row_block = dict_of_blocks[1,1]
-                else
-                    row_block = dict_of_blocks[j, 1]
-                end
+                row_block = dict_of_blocks[i, j]
+                # if j == i
+                #     row_block = dict_of_blocks[1,1]
+                # else
+
+                # end
             else
                 row_block = hcat(row_block, dict_of_blocks[i,j])
             end
@@ -148,9 +149,7 @@ function MakeGTensLConsMat(M,t,Lx)
     return GTensLCons
 end
 
-
-#MakeGTensLConsMat(M,t,Lx) - MakeGTensLConsMat1(LocConDict, M, LMB,x)
-
+# MakeGTensLConsMat(M,t,Lx) - MakeGTensLConsMat1(LocConDict, M, LMB,x)
 """M(G ⊗ L) ⪰ 0 constraints"""
 function MakeGTensLConsMat1(LocConDict, M, LMB,x)
     n = size(M)[1]
