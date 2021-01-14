@@ -15,7 +15,7 @@ include("Make_xi^cp_constraints.jl")
 include("Compute_xi^cp.jl")
 
 
-a,b,c,d,e = (1,1,1,0,0)
+a,b,c,d,e = (1,1,1,1,0)
 loadPath = "C:\\Users\\andries\\all-my-codes\\cp-rank-bounding\\Data\\CPmats\\M7.txt"
 
 if 1 == a
@@ -171,20 +171,36 @@ LocConDict = genCP_localizing_Constraints(M,MonBaseₜ₋₁,Lx)
 # Test Computeξₜᶜᵖ for example matrices.
 if 1 == d
     @testset "Computeξₜᶜᵖ" begin
-        M  = mat_repo.loadMatfromtxt(loadPath)
+        cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
+        loadPath = "C:\\Users\\andries\\.julia\\dev\\CP-Rank-Bounding\\Data\\CPmats\\"*cp_mats[3]
+        M = mat_repo.loadMatfromtxt(loadPath)
+
         t  = 2
         ξ₂ᶜᵖ           = Computeξₜᶜᵖ(M, t, false,0,false)
+        @test ξ₂ᶜᵖ           == 4.2183
+
         ξ₂ᵩᶜᵖ          = Computeξₜᶜᵖ(M, t, true, 0,false)
+        @test ξ₂ᵩᶜᵖ          == 6.2388
+
+        ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 0, true)
+        @test ξ₂ₓₓᶜᵖ         == 5.0581
+
+        ξ₂weakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, false, 1,false)
+        @test ξ₂weakTensᶜᵖ   == 6.907
+
+        ξ₂Tensᶜᵖ      = Computeξₜᶜᵖ(M, t, false, 2,false)
+        @test ξ₂Tensᶜᵖ       == 6.8033
+
+        ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
+        @test ξ₂ᵩTensᶜᵖ      == 6.9999
 
         ξₜᵩweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
-        ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
+        @test ξ₂ᵩweakTensᶜᵖ  == 7.0
+
         ξ₂ᵩTensₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
-        ξ₂ₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, false, 0, true)
-        # @test ξ₂ᶜᵖ          - 4.2183 == 0
-        # @test ξ₂ᵩᶜᵖ         - 6.1097 == 0
-        # @test ξₜᵩweakTensᶜᵖ - 6.9569 == 0
-        # @test ξ₂ᵩTensᶜᵖ     - 6.9569 == 0
-        # @test ξ₂ᵩTensₓₓᶜᵖ   - 9.6389 == 0
+        @test ξ₂ᵩTensₓₓᶜᵖ    == 9.8757
+
+
     end
 end
 
@@ -192,27 +208,10 @@ end
 ## moments
 
 ## load a matrix:
-cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
-loadPath = "C:\\Users\\andries\\.julia\\dev\\CP-Rank-Bounding\\Data\\CPmats\\"*cp_mats[3]
-M = mat_repo.loadMatfromtxt(loadPath)
-
-t = 2
-n = size(M)[1]
-include("Compute_xi^cp.jl")
-
-ξ₂ᶜᵖ           = Computeξₜᶜᵖ(M, t, false,0,false)
-ξ₂ᵩᶜᵖ          = Computeξₜᶜᵖ(M, t, true, 0,false)
-ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 0, true)
-ξₜweakTensᶜᵖ     = Computeξₜᶜᵖ(M, t, false, 1,false)
-ξₜTensᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 2,false)
-ξₜᵩweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
-ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
-ξ₂ᵩTensₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
+M
+t
 
 
-
-
-#
 # A             = MakeGTensLConsMat(M,t,Lx)
 #
 # LMB           = make_mon_expo(n, t - 1)

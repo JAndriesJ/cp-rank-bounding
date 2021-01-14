@@ -109,8 +109,8 @@ end
 
 
 
-dataDir_lst =  ["CPmats", "randCPmats", "DDSNNmats","SNN_Mat"]
-for i in 2:3
+dataDir_lst =  ["CPmats", "randCPmats", "DDSNNmats","SNNMats"]
+for i in 4:4
     batchCompξ₂ᶜᵖ(dataDir_lst[i])
 end
 
