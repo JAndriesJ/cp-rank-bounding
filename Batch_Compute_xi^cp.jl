@@ -1,12 +1,15 @@
 #"""save computations to a .txt file """
-main_dir = "C:\\Users\\andries\\all-my-codes\\"
+using Dates # used in the output file naming
+    main_dir = "C:\\Users\\andries\\all-my-codes\\"
+    include("Compute_xi^cp.jl")
+    include(main_dir*"matrix-menagerie\\mat_repo.jl")
+    import .mat_repo
 
-include("Compute_xi^cp.jl")
-include(main_dir*"matrix-menagerie\\mat_repo.jl")
-import .mat_repo
+    timestamp = replace(string(now()),":"=>"-")[1:16]
 
-dataDir = main_dir*"cp-rank-bounding\\Data\\"
-outputDir = main_dir*"cp-rank-bounding\\Output\\"
+    dataDir = main_dir*"cp-rank-bounding\\Data\\"
+    outputDir = mat_repo.check_save_dir(main_dir*"cp-rank-bounding\\", "Output\\"*timestamp)
+
 
 function append_to_md(path,text)
     open( path, "a") do f
@@ -110,8 +113,9 @@ end
 
 
 dataDir_lst =  ["CPmats", "randCPmats", "DDSNNmats","SNNMats"]
-for i in 4:4
+for i in 1:4
     batchCompξ₂ᶜᵖ(dataDir_lst[i])
 end
 
 """TO DO: make a batch update """
+replace(string(now()),":"=>"-")
