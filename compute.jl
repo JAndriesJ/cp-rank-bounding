@@ -1,40 +1,17 @@
 using JuMP # For the optimization frame work.
 using MosekTools # The solver that we use.
 
-
 include("constraints.jl")
-# A
-# t = 2
-# n = size(A)[1]
-# MomMatExp  = make_mom_expo_mat_dict(n, t)
-# MonBase = make_mon_expo(n, t)
-# nb_mon = size(MonBase)[1]
-#
-# ## Begin making the model
-# model = Model(Mosek.Optimizer)
-# ## Build the moment matrix and constrain it to be PSD.
-#
-# MomMatExp    = make_mom_expo_mat_dict(n, t)
-# list_of_keys = [key for key in keys(MomMatExp) ]
-# @variable(model,Lx[list_of_keys] )
-#
-#
-# isDag,GtensL,isXX  = (true,1,false)
-# Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
-# isDag,GtensL,isXX  = (true,2,false)
-# Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
 
-"""This is where the ξₜᶜᵖ is calculated for matrix M """
+"""This is where the ξₜᶜᵖ is calculated for matrix A """
 function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
     n = size(A)[1]
-    MomMatExp  = make_mom_expo_mat_dict(n, t)
-    MonBase = make_mon_expo(n, t)
-    nb_mon = size(MonBase)[1]
+    nb_mon = binomial(t+n,t)
 
     ## Begin making the model
     model = Model(Mosek.Optimizer)
     # Define all variables that occur in the moment matrix.
-    list_of_keys = [key for key in keys(MomMatExp) ]
+    list_of_keys = make_mom_expo_keys(n, t)
     @variable(model, Lx[list_of_keys] )
     n = size(A)[1]
 ## Build the moment matrix and constrain it to be PSD.

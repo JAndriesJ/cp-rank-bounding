@@ -1,31 +1,16 @@
-include("..\\matrix-menagerie\\./mat_repo.jl")
+using LinearAlgebra # For the matrix manipulations and preprocessing.
+# using JuMP # For the optimization frame work.
+
+
 include("moment_utils.jl")
 
-# cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
-# loadPath = "C:\\Users\\andries\\.julia\\dev\\CP-Rank-Bounding\\Data\\CPmats\\"*cp_mats[3]
-# A = mat_repo.loadMatfromtxt(loadPath)
-# t = 2
-# n = 7
-# Lx= make_dummy_var(n,t)
-# mom₂ₜ = make_mon_expo(n,2*t)
-# mom =  make_mon_expo_mat(n,t,true)
-#
-# dag_con = make_dag_con(A,t,Lx)
-# loc_con = make_loc_con(A,t,Lx)
-# xx_con  = make_xx_con(A,t,Lx)
-# index_to_var(Lx,mom)
-# weakG_con = make_weakG_con(A,t,Lx)
-# G_con = make_G_con(A,t,Lx)
-#
-
-"""This is just for testing puposes and sould not be used."""
-function make_dummy_var(n,t)
-    MomMatExp    = make_mom_expo_mat_dict(n, t)
-    model        = Model(Mosek.Optimizer)
-    list_of_keys = [key for key in keys(MomMatExp) ]
-    @variable(model,Lx[list_of_keys] )
-    return Lx
-end
+# """This is just for testing puposes and sould not be used."""
+# function make_dummy_var(n,t)
+#     model        = Model(Mosek.Optimizer)
+#     list_of_keys = make_mom_expo_keys(n, t)
+#     @variable(model,Lx[list_of_keys] )
+#     return Lx
+# end
 
 
 """

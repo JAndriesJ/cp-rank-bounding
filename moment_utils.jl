@@ -1,9 +1,4 @@
 #Do you have a moment? (Goal: implement xi_cp of the FOCM paper. Eventually add the G-constraints)
-using LinearAlgebra # For the matrix manipulations and preprocessing.
-using JuMP # For the optimization frame work.
-using MosekTools # The solver that we use.
-import .mat_repo
-include("..\\matrix-menagerie\\./mat_repo.jl")
 
 # abbreviations for convenience
 tra = transpose
@@ -71,14 +66,10 @@ function make_mon_expo_mat(n::Int,t::Tuple{Int64,Int64},isLeq::Bool = true)
     xxᵀₜ     = reshape(xxᵀₜ_vec, (nb_mon1, nb_mon2) )
     return xxᵀₜ
 end
-
 function make_mon_expo_mat(n::Int,t::Int,isLeq::Bool = true)
     xxᵀₜ     = make_mon_expo_mat(n,(t,t),isLeq)
     return xxᵀₜ
 end
-
-# println(make_mon_expo_mat(3,(2,1),false))
-
 
 
 """
@@ -93,9 +84,6 @@ function get_mon_index(B,α)
         println("There is no such entry.")
     end
 end
-# mom = make_mon_expo(3,2,false)
-# println(get_mon_index(mom,[1 1 0]))
-
 
 """
 input:  n(integer),t(integer)
@@ -103,23 +91,9 @@ output: dictionary: keys: unique exponents in [x]≦ₜ[x]≦ₜᵀ
                     values: indeces in [x]≦ₜ[x]≦ₜᵀ corresponding to key as exponent
 comment: Dictionary: keys γ ∈ N_2t^n, values are indeces in Moment matrix array of (α,β) ∈ (N_2t^n)^2 such that α + β = γ
 """
-function make_mom_expo_mat_dict(n::Int,t::Int)
+function make_mom_expo_keys(n::Int,t::Int)
     mon_vec = make_mon_expo(n,t)
-    mom_mat_dict = Dict()
-
-    for α in mon_vec
-        row_index = get_mon_index(mon_vec,tra(α))
-        for β in mon_vec
-            col_index = get_mon_index(mon_vec, tra(β))
-            γ = α + β
-            if haskey(mom_mat_dict, γ)
-                mom_mat_dict[γ]  = push!(mom_mat_dict[γ], (row_index, col_index)) # Index by position in Monmial vector.
-            else
-                mom_mat_dict[γ]  = [(row_index, col_index)]
-            end
-        end
-    end
-    return mom_mat_dict
+    return unique( [ α + β for α in mon_vec, β in mon_vec ])
 end
 
 ## Utility
