@@ -28,6 +28,8 @@ function make_mon_expo_arr(n::Int,t::Int, isLeq::Bool = true)
 end
 # println(make_mon_expo_arr(3,2,false))
 
+typeof(make_mon_expo_arr(7,4))
+
 """
 input: n (integer),t(integer)
 output: exponents α ∈ Nⁿₜ of [x]≦ₜ of [x]₌ₜ (array of arrays of integers)
@@ -45,12 +47,13 @@ input: n (integer),k(integer)
 output: eₖ ∈ {0,1}ⁿ i.e. the standard basis vector
 """
 function get_std_base_vec(n::Int,k::Int)
-    mon_expo = make_mon_expo(n,1,false)
-    eₖ = mon_expo[k]
+    @assert n >= k
+    eₖ = zeros(Int32,n)
+    eₖ[k] = 1
     return eₖ
 end
 # println(get_std_base_vec(3,3))
-
+#get_std_base_vec(7,4)
 
 """
 input: n(integer),t(integer)
@@ -87,9 +90,8 @@ end
 
 """
 input:  n(integer),t(integer)
-output: dictionary: keys: unique exponents in [x]≦ₜ[x]≦ₜᵀ
-                    values: indeces in [x]≦ₜ[x]≦ₜᵀ corresponding to key as exponent
-comment: Dictionary: keys γ ∈ N_2t^n, values are indeces in Moment matrix array of (α,β) ∈ (N_2t^n)^2 such that α + β = γ
+output: array: unique exponents in [x]≦ₜ[x]≦ₜᵀ γ ∈ N_2t^n, values are indeces in
+                    moment matrix array of (α,β) ∈ (N_2t^n)^2 such that α + β = γ
 """
 function make_mom_expo_keys(n::Int,t::Int)
     mon_vec = make_mon_expo(n,t)
@@ -148,15 +150,21 @@ function var_kron(A,B)
     return assemble_dict(D)
 end
 
+
+## Not used.
+
 """
 input: A(array of integer tupples), ℓ(Integer)
 output: exponent array of A ⊗ ...⊗ A (ℓ-times)
 """
 function var_self_kron(A,ℓ)
     A_tens = Dict()
-    A_tens[0] = A
-    for i in 1:ℓ
+    A_tens[1] = A
+    if ℓ == 1
+        return A_tens[1]
+    end
+    for i in 2:ℓ
         A_tens[i] = var_kron(A,A_tens[i-1])
     end
-    return A_tens
+    return A_tens[ℓ]
 end

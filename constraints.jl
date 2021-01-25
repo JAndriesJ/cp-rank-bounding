@@ -106,7 +106,7 @@ function make_weakG_con(A,t,Lx)
     n = size(A)[1]
     weakG_con = Dict()
     LMBexp_1 =  make_mon_expo_mat(n,1,false)
-    for ℓ in 0:(t-1)
+    for ℓ in 1:(t-1)
         LMBexp_ℓ          = make_mon_expo_mat(n,ℓ,false)   #exponents of [x]₌ₗ[x]₌ₗᵀ
         LMBexp_1ℓ         = var_kron(LMBexp_1,LMBexp_ℓ)    #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
         LMB_ℓ             = index_to_var(Lx,LMBexp_ℓ)      # L([x]₌ₗ[x]₌ₗᵀ)
@@ -120,18 +120,19 @@ end
 
 """M(G ⊗ L) ⪰ 0 constraints
 input: A(data matrix),t(Integer),Lx(JuMP variable)
-output: A⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ)
+Assumption: G = A-[x]₌₁[x]₌₁ᵀ
+output: A⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
 """
 function make_G_con(A,t,Lx)
     n = size(A)[1]
     LMBexp_1          = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
-    LMBexp_t          = make_mon_expo_mat(n,t-1,true)#exponents of [x]ₜ[x]ₜᵀ
-    LMB_t             = index_to_var(Lx,LMBexp_t)    #L([x]ₜ[x]ₜᵀ)
+    LMBexpₜ₋₁          = make_mon_expo_mat(n,t-1,true)#exponents of [x]ₜ₋₁[x]ₜ₋₁ᵀ
+    LMBₜ₋₁             = index_to_var(Lx,LMBexpₜ₋₁)    #L([x]ₜ₋₁[x]ₜ₋₁ᵀ)
 
-    LMBexp_1t         = var_kron(LMBexp_1,LMBexp_t)  #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ)
-    LMB_1t            = index_to_var(Lx,LMBexp_1t)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ))
+    LMBexp_1ₜ₋₁         = var_kron(LMBexp_1,LMBexpₜ₋₁)  #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
+    LMB_1ₜ₋₁            = index_to_var(Lx,LMBexp_1ₜ₋₁)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
 
-    G_con = kron(A,LMB_t) - LMB_1t              # A⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ[x]ₜᵀ)
+    G_con = kron(A,LMBₜ₋₁) - LMB_1ₜ₋₁             # A⊗L([x]ₜ₋₁[x]ₜ₋₁ᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
     return G_con
 end
 

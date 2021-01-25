@@ -9,14 +9,11 @@ include("moment_utils.jl")
 include("constraints.jl")
 include("compute.jl")
 
-pwd()
 
 script_dir = @__DIR__
-
+loadPath = script_dir*"\\Data\\CPmats\\M7.txt"
 
 a,b,c,d,e = (0,0,0,0,0)
-loadPath = script_dir*"\\Data\\CPmats\\M7.txt"
-che = (n,t) -> binomial(n+1,t)
 ## matrices
 if 1 == a
     @testset "loadMatfromtxt and saveMat2txt" begin
@@ -140,6 +137,7 @@ if 1 == c
     t = 2
     n = size(A)[1]
     Lx = make_dummy_var(n,t)
+    che = (n,t) -> binomial(n+1,t)
 
     @testset "make_loc_con" begin
         loc_con = make_loc_con(A,t,Lx)
@@ -232,7 +230,9 @@ if false
     #@test ξ₂Tensᶜᵖ       == 6.8033
 end
 
-ξ₂ᶜᵖ           = Computeξₜᶜᵖ(A, t, false,0,false)
+
+ξ₂weakGᶜᵖ      = Computeξₜᶜᵖ(A, t, false, 1,false)
+ξ₂Gᶜᵖ          = Computeξₜᶜᵖ(A, t, false, 2,false)
 # t  = 3
 #ξ₃ᶜᵖ           = Computeξₜᶜᵖ(A, t, false,0,false)
 
