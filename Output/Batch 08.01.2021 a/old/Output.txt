@@ -1,9 +1,0 @@
-  Example        xi_2     	xi_2,"dag"	xi_2,"dag",tens xi_2,"dag",tens,XX	 xi_3	 xi_3,"dag"	 xi_3,"dag",tens
-  "M₇"       => 4.21827		6.10971		6.95685 	 No change !?
-  "M₇tilde"  => 4.66946		7.58569		7.62027		 Something is wrong
-  "M₈tilde"  => 5.56716		7.92909		7.93269
-  "M₉tilde"  => 5.70798		10.3484		10.6038
-  "M₁₁tilde" => 7.7804 	  	19.0076		19.0906		
-
-
-
