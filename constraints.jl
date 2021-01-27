@@ -125,12 +125,12 @@ output: A⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ
 """
 function make_G_con(A,t,Lx)
     n = size(A)[1]
-    LMBexp_1          = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
+    LMBexp_1           = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
     LMBexpₜ₋₁          = make_mon_expo_mat(n,t-1,true)#exponents of [x]ₜ₋₁[x]ₜ₋₁ᵀ
     LMBₜ₋₁             = index_to_var(Lx,LMBexpₜ₋₁)    #L([x]ₜ₋₁[x]ₜ₋₁ᵀ)
 
-    LMBexp_1ₜ₋₁         = var_kron(LMBexp_1,LMBexpₜ₋₁)  #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
-    LMB_1ₜ₋₁            = index_to_var(Lx,LMBexp_1ₜ₋₁)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
+    LMBexp_1ₜ₋₁        = var_kron(LMBexp_1,LMBexpₜ₋₁)  #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
+    LMB_1ₜ₋₁           = index_to_var(Lx,LMBexp_1ₜ₋₁)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
 
     G_con = kron(A,LMBₜ₋₁) - LMB_1ₜ₋₁             # A⊗L([x]ₜ₋₁[x]ₜ₋₁ᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
     return G_con

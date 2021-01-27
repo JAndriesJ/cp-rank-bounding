@@ -4,10 +4,10 @@ using Test # Utility module for testing if code works as intended.
 
 # Test Data generation:
 
-include("mat_IO.jl")
-include("moment_utils.jl")
-include("constraints.jl")
-include("compute.jl")
+    include("mat_IO.jl")
+    include("moment_utils.jl")
+    include("constraints.jl")
+    include("compute.jl")
 
 
 script_dir = @__DIR__
@@ -212,6 +212,7 @@ end
 cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
 loadPath = script_dir*"\\Data\\CPmats\\"*cp_mats[5]
 A = loadMatfromtxt(loadPath)
+n = size(A)[1]
 t  = 2
 if false
     ξ₂ᶜᵖ           = Computeξₜᶜᵖ(A, t, false,0,false)
@@ -229,13 +230,33 @@ if false
     ξ₂Gᶜᵖ          = Computeξₜᶜᵖ(A, t, false, 2,false)
     #@test ξ₂Tensᶜᵖ       == 6.8033
 end
+# A = [1.0 0.5 ; 0.5 1.0]
+
+LxG,model_ξ₂Gᶜᵖ  = Computeξₜᶜᵖ(A, t, false,2,false)
+LxwG,model_ξ₂wGᶜᵖ  = Computeξₜᶜᵖ(A, t, false,1,false)
+
+ξ₂Gᶜᵖ = objective_value(model_ξ₂Gᶜᵖ)
+ξ₂wGᶜᵖ = objective_value(model_ξ₂wGᶜᵖ)
+
+value.(LxG) == value.(LxwG)
+mom_matG        = rec_mom_mat(A,t,LxG)
+mom_matwG       = rec_mom_mat(A,t,LxwG)
+mom_matG == mom_matwG
+##
+mom_matG[2:(1+n),2:(1+n)]   == A
+
+## Test the soulution
+@show eigvals(mom_matG)
+@show eigvals(mom_matwG)
 
 
-ξ₂weakGᶜᵖ      = Computeξₜᶜᵖ(A, t, false, 1,false)
-ξ₂Gᶜᵖ          = Computeξₜᶜᵖ(A, t, false, 2,false)
-# t  = 3
-#ξ₃ᶜᵖ           = Computeξₜᶜᵖ(A, t, false,0,false)
 
+testPSD(mom_matG)
+testPSD(mom_matwG)
+## Weak Constraints test
+# M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ) ⪰ 0, ℓ ∈ 0,1,t-deg(g)/2
+weakG_conG =  make_weakG_con(A,t,LxG)
+testPSD(value.(weakG_conG[1]))
 
-
-##  https://jump.dev/JuMP.jl/dev/reference/solutions/
+G_conwG =  make_G_con(A,t,LxwG)
+testPSD(value.(G_conwG[1]))

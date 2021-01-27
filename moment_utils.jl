@@ -52,6 +52,13 @@ function get_std_base_vec(n::Int,k::Int)
     eₖ[k] = 1
     return eₖ
 end
+
+function get_std_base_vec(Array,k)
+    eₖ = Array[:,k+1]
+    eₖ[k] = 1
+    return eₖ
+end
+
 # println(get_std_base_vec(3,3))
 #get_std_base_vec(7,4)
 

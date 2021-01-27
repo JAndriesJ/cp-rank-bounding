@@ -40,3 +40,28 @@ function loadMatfromtxt(loadPath)
     M = real(reshape(Mflat,(n,n)))
     return M
 end
+
+
+"""cuts every thing in the string after the '.' """
+function cut_ext(srttxt)
+    ext_ind = findlast(isequal('.'), srttxt)
+    return string(srttxt[1:(ext_ind-1)])
+end
+
+
+##
+
+## Testing properties of the matrix
+"""Test if matrix is nonnegative"""
+function testNN(A)
+    isNN = minimum(A) > -1.0e-10
+    return isNN
+end
+
+"""Test if matrix M is PSD"""
+function testPSD(A)
+    eigV = eigvals(A)
+    isPSD1 = sum(imag(eigV)) < 1.0e-10
+    isPSD2 = minimum(real(eigV)) > - 1.0e-10
+    return isPSD1 && isPSD1
+end

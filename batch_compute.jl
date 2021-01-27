@@ -1,14 +1,13 @@
 #"""save computations to a .txt file """
 using Dates # used in the output file naming
-    main_dir = "C:\\Users\\andries\\all-my-codes\\"
-    include("Compute_xi^cp.jl")
-    include(main_dir*"matrix-menagerie\\mat_repo.jl")
-    import .mat_repo
+    main_dir = @__DIR__
+    include("compute.jl")
+    include("mat_IO.jl")
 
     timestamp = replace(string(now()),":"=>"-")[1:16]
 
-    dataDir = main_dir*"cp-rank-bounding\\Data\\"
-    outputDir = mat_repo.check_save_dir(main_dir*"cp-rank-bounding\\", "Output\\"*timestamp)
+    dataDir = main_dir*"\\Data\\"
+    outputDir = check_save_dir(main_dir*"\\", "\\Output\\"*timestamp)
 
 
 function append_to_md(path,text)
@@ -21,7 +20,7 @@ end
 function batchCompξ₂ᶜᵖ(loadName)
     counter = 1
     #colnames  = "Matrix,    cp-rank,    n²/4,  ξ₂ᶜᵖ,      ξ₂ᵩᶜᵖ,      ξ₂ᵩweak⊗ᶜᵖ,     ξ₂ᵩ⊗ᶜᵖ,    ξ₂ᵩ⊗ᶜᵖ + xᵢxⱼ"
-    Header1 = "|Matrix| cp-rank| n²/4| ξ₂ᶜᵖ|  ξ₂ᵩᶜᵖ| ξ₂ₓₓᶜᵖ | ξ₂weak⊗ᶜᵖ|ξ₂ᵩweak⊗ᶜᵖ| ξ₂⊗ᶜᵖ|ξ₂ᵩ⊗ᶜᵖ| ξ₂ᵩ⊗ᶜᵖ + xᵢxⱼ|"
+    Header1 = "|Matrix| cp-rank| n²/4| ξ₂ᶜᵖ|  ξ₂ᵩᶜᵖ| ξ₂ₓₓᶜᵖ | ξ₂weakGᶜᵖ|ξ₂ᵩweakGᶜᵖ| ξ₂Gᶜᵖ|ξ₂ᵩGᶜᵖ| ξ₂ᵩGᶜᵖ + xᵢxⱼ|"
     Header2 = "|---|---|---|---|---|---|---|---|---|---|---|"
     loadDir = dataDir*loadName*"\\"
     Matfiles =  cd(readdir, loadDir)
@@ -35,9 +34,9 @@ function batchCompξ₂ᶜᵖ(loadName)
         #    break
         # end
         loadPath = loadDir*matfile
-        M       = mat_repo.loadMatfromtxt(loadPath)
-        n2d4    = mat_repo.n2div4(M)
-        MatName = mat_repo.cut_ext(matfile)
+        M        = loadMatfromtxt(loadPath)
+        n2d4     = A -> floor(size(A)[1]^2 /4)
+        MatName  = cut_ext(matfile)
 
 
         #ξ₂ᶜᵖ, ξ₂ᵩᶜᵖ, ξ₂weakTensᶜᵖ,ξ₂ᵩweakTensᶜᵖ,ξ₂Tensᶜᵖ,ξ₂ᵩTensᶜᵖ, ξ₂ᵩTensₓₓᶜᵖ = compξᶜᵖ(M,2)
@@ -51,16 +50,16 @@ function batchCompξ₂ᶜᵖ(loadName)
         append_to_md(save_path,"$ξ₂ᵩᶜᵖ|")
         ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(M, t, false, 0, true)
         append_to_md(save_path,"$ξ₂ₓₓᶜᵖ|")
-        ξ₂weakTensᶜᵖ   = Computeξₜᶜᵖ(M, t, false, 1,false)
-        append_to_md(save_path,"$ξ₂weakTensᶜᵖ|")
-        ξ₂ᵩweakTensᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
-        append_to_md(save_path,"$ξ₂ᵩweakTensᶜᵖ|")
-        ξ₂Tensᶜᵖ       = Computeξₜᶜᵖ(M, t, false, 2,false)
-        append_to_md(save_path,"$ξ₂Tensᶜᵖ|")
-        ξ₂ᵩTensᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
-        append_to_md(save_path,"$ξ₂ᵩTensᶜᵖ|")
-        ξ₂ᵩTensₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
-        append_to_md(save_path,"$ξ₂ᵩTensₓₓᶜᵖ| \n")
+        ξ₂weakGᶜᵖ   = Computeξₜᶜᵖ(M, t, false, 1,false)
+        append_to_md(save_path,"$ξ₂weakGᶜᵖ|")
+        ξ₂ᵩweakGᶜᵖ  = Computeξₜᶜᵖ(M, t, true, 1,false)
+        append_to_md(save_path,"$ξ₂ᵩweakGᶜᵖ|")
+        ξ₂Gᶜᵖ       = Computeξₜᶜᵖ(M, t, false, 2,false)
+        append_to_md(save_path,"$ξ₂Gᶜᵖ|")
+        ξ₂ᵩGᶜᵖ      = Computeξₜᶜᵖ(M, t, true, 2,false)
+        append_to_md(save_path,"$ξ₂ᵩGᶜᵖ|")
+        ξ₂ᵩGₓₓᶜᵖ    = Computeξₜᶜᵖ(M, t, true, 2, true)
+        append_to_md(save_path,"$ξ₂ᵩGₓₓᶜᵖ| \n")
 
 
         # if ~(ξ₂ᶜᵖ <= ξ₂ᵩᶜᵖ<= ξ₂ᵩweakTensᶜᵖ<= ξ₂ᵩTensᶜᵖ<= ξ₂ᵩTensₓₓᶜᵖ)
@@ -87,14 +86,12 @@ function batchCompStuff(loadName)
            break
         end
         loadPath = loadDir*matfile
-        M       = mat_repo.loadMatfromtxt(loadPath)
+        M       = loadMatfromtxt(loadPath)
 
-        if  ~mat_repo.testNN(M) || ~mat_repo.testPSD(M)
+        if  ~testNN(M) || ~testPSD(M)
             println(matfile)
         end
-        # println(mat_repo.testNN(M))
-        # println(mat_repo.testPSD(M))
-        # println("Is DD:"*mat_repo.testDD(M))
+
 
         counter = counter + 1
     end
@@ -117,5 +114,5 @@ for i in 1:4
     batchCompξ₂ᶜᵖ(dataDir_lst[i])
 end
 
-"""TO DO: make a batch update """
-replace(string(now()),":"=>"-")
+# """TO DO: make a batch update """
+# replace(string(now()),":"=>"-")
