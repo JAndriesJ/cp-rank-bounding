@@ -11,11 +11,11 @@ using Test # Utility module for testing if code works as intended.
 
 
 script_dir = @__DIR__
-loadPath = script_dir*"\\Data\\CPmats\\M7.txt"
 
 a,b,c,d,e = (0,0,0,0,0)
 ## matrices
 if 1 == a
+    loadPath = script_dir*"\\Data\\CPmats\\M7.txt"
     @testset "loadMatfromtxt and saveMat2txt" begin
         M7 = loadMatfromtxt(loadPath)
 
@@ -210,7 +210,7 @@ end
 ## load a matrix:
 
 cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
-loadPath = script_dir*"\\Data\\CPmats\\"*cp_mats[5]
+loadPath = script_dir*"\\Data\\CPmats\\"*cp_mats[4]
 A = loadMatfromtxt(loadPath)
 n = size(A)[1]
 t  = 2
@@ -232,27 +232,34 @@ if false
 end
 # A = [1.0 0.5 ; 0.5 1.0]
 
-LxG,model_ξ₂Gᶜᵖ  = Computeξₜᶜᵖ(A, t, false,2,false)
-LxwG,model_ξ₂wGᶜᵖ  = Computeξₜᶜᵖ(A, t, false,1,false)
+dag_con = false
+xx_con = false
+
+LxG,model_ξ₂Gᶜᵖ  = Computeξₜᶜᵖ(A, t, dag_con,2,xx_con)
+LxwG,model_ξ₂wGᶜᵖ  = Computeξₜᶜᵖ(A, t, dag_con,1,xx_con)
 
 ξ₂Gᶜᵖ = objective_value(model_ξ₂Gᶜᵖ)
 ξ₂wGᶜᵖ = objective_value(model_ξ₂wGᶜᵖ)
+
 
 value.(LxG) == value.(LxwG)
 mom_matG        = rec_mom_mat(A,t,LxG)
 mom_matwG       = rec_mom_mat(A,t,LxwG)
 mom_matG == mom_matwG
 ##
-mom_matG[2:(1+n),2:(1+n)]   == A
-
+mom_matG[2:(1+n),2:(1+n)]  ≈ A
+mom_matwG[2:(1+n),2:(1+n)]  ≈ A
 ## Test the soulution
 @show eigvals(mom_matG)
 @show eigvals(mom_matwG)
 
+minimum(eigvals(mom_matG))
+minimum(eigvals(mom_matwG))
 
+@show eigvals(mom_matG) .> eigvals(mom_matwG)
 
-testPSD(mom_matG)
-testPSD(mom_matwG)
+isposdef(mom_matG)
+isposdef(mom_matwG)
 ## Weak Constraints test
 # M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ) ⪰ 0, ℓ ∈ 0,1,t-deg(g)/2
 weakG_conG =  make_weakG_con(A,t,LxG)

@@ -1,6 +1,15 @@
 using JuMP # For the optimization frame work.
 using MosekTools # The solver that we use.
-# using GLPK
+# Pkg.add("COSMO")
+# using COSMO
+# Pkg.add("SDPA")
+# using SDPA
+
+# using CDCS
+# using CSDP
+# using ProxSDP
+# using SCS
+
 # using Cbc
 include("constraints.jl")
 
@@ -9,7 +18,8 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
     n = size(A)[1]
     ## Begin making the model
     model = Model(Mosek.Optimizer)
-    # model = Model(GLPK.Optimizer)
+    # model = Model(COSMO.Optimizer)
+    # model = Model(SDPA.Optimizer)
     # Define all variables that occur in the moment matrix.
     list_of_keys = make_mom_expo_keys(n, t)
     @variable(model, Lx[list_of_keys] )
