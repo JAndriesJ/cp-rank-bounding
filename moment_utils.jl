@@ -2,7 +2,7 @@
 
 # abbreviations for convenience
 tra = transpose
-cl = clearconsole
+# cl = clearconsole
 
 """
 input: n (integer),t(integer)

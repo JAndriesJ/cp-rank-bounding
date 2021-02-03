@@ -1,8 +1,11 @@
 using JuMP # For the optimization frame work.
 using MosekTools # The solver that we use.
+
+using GLPK
+
 # Pkg.add("COSMO")
 # using COSMO
-# Pkg.add("SDPA")
+# Pkg.add("SDPA") # TODO make this work
 # using SDPA
 
 # using CDCS
@@ -31,6 +34,7 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
     mom_mat₌₁ = make_mon_expo_mat(n,1,false)
     Lx_mom_mat₌₁ = index_to_var(Lx,mom_mat₌₁)
     @constraint(model, fix_con,Lx_mom_mat₌₁ .==  A)
+    # fix(Lx_mom_mat₌₁, A)
 
     # for i ∈ 1:n, j ∈ 1:n
     #     eᵢ = get_std_base_vec(n,i)
@@ -57,10 +61,8 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
     if isXX
         println("----------------XX constraints are active")
         xx_con = make_xx_con(A,t,Lx)
-        for k in 1:n
-            for h in (k+1):n
-                @SDconstraint(model, xx_con[(k,h)] >= zeros(size(xx_con[(k,h)])))
-            end
+        for key in keys(xx_con)
+            @SDconstraint(model, xx_con[key] >= zeros(size(xx_con[key])))
         end
     end
 ## G Constraints
@@ -73,9 +75,15 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
            @SDconstraint(model, weakG_con_key >= zeros(size(weakG_con_key)))
         end
     end
-    if GtensL == 2
+    if GtensL == 2.1
         println("----------------G-constraints are active")
         G_con                 = make_G_con(A,t,Lx)
+        @SDconstraint(model, G_con >= zeros(size(G_con)))
+    end
+
+    if GtensL == 2.2
+        println("----------------G-constraints are active")
+        G_con                 = make_G_con2(A,t,Lx)
         @SDconstraint(model, G_con >= zeros(size(G_con)))
     end
 

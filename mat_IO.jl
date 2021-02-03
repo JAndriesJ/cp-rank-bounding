@@ -57,11 +57,3 @@ function testNN(A)
     isNN = minimum(A) > -1.0e-10
     return isNN
 end
-
-"""Test if matrix M is PSD"""
-function testPSD(A)
-    eigV = eigvals(A)
-    isPSD1 = sum(imag(eigV)) < 1.0e-10
-    isPSD2 = minimum(real(eigV)) > - 1.0e-10
-    return isPSD1 && isPSD1
-end

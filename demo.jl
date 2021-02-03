@@ -1,16 +1,13 @@
 using Test # Utility module for testing if code works as intended.
+using BenchmarkTools
 #using JuMP # For the optimization frame work.
 #using MosekTools # The solver that we use.
-
-# Test Data generation:
 
     include("mat_IO.jl")
     include("moment_utils.jl")
     include("constraints.jl")
     include("compute.jl")
-
-
-script_dir = @__DIR__
+    script_dir = @__DIR__
 
 a,b,c,d,e = (0,0,0,0,0)
 ## matrices
@@ -209,61 +206,163 @@ end
 
 ## load a matrix:
 
-cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
-loadPath = script_dir*"\\Data\\CPmats\\"*cp_mats[4]
-A = loadMatfromtxt(loadPath)
+
+
+
+function quick_load_mat(n::Integer)
+    cp_mats = ["M11tilde.txt"  "M6.txt"  "M7.txt"  "M7tilde.txt"  "M8tilde.txt"  "M9tilde.txt"]
+    loadPath = script_dir*"\\Data\\CPmats\\"*cp_mats[n]
+    return loadMatfromtxt(loadPath)
+end
+
+A = quick_load_mat(6)
 n = size(A)[1]
 t  = 2
-if false
-    ξ₂ᶜᵖ           = Computeξₜᶜᵖ(A, t, false,0,false)
-    #@test ξ₂ᶜᵖ           == 4.2183
-
-    ξ₂ᵩᶜᵖ          = Computeξₜᶜᵖ(A, t, true, 0,false)
-    #@test ξ₂ᵩᶜᵖ          == 6.2388
-
-    ξ₂ₓₓᶜᵖ         = Computeξₜᶜᵖ(A, t, false, 0, true)
-    #@test ξ₂ₓₓᶜᵖ         == 5.0581
-
-    ξ₂weakGᶜᵖ      = Computeξₜᶜᵖ(A, t, false, 1,false)
-    #@test ξ₂weakTensᶜᵖ   == 6.907
-
-    ξ₂Gᶜᵖ          = Computeξₜᶜᵖ(A, t, false, 2,false)
-    #@test ξ₂Tensᶜᵖ       == 6.8033
-end
-# A = [1.0 0.5 ; 0.5 1.0]
-
 dag_con = false
 xx_con = false
 
-LxG,model_ξ₂Gᶜᵖ  = Computeξₜᶜᵖ(A, t, dag_con,2,xx_con)
-LxwG,model_ξ₂wGᶜᵖ  = Computeξₜᶜᵖ(A, t, dag_con,1,xx_con)
+# A = [1.0 0.5 ; 0.5 1.0]
+Lx_1,model_ξ₂_1ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,2.1,false)
+objective_value(model_ξ₂_1ᶜᵖ)
+mom_mat_Temp            = rec_mom_mat(A,t,Lx_1)
 
-ξ₂Gᶜᵖ = objective_value(model_ξ₂Gᶜᵖ)
-ξ₂wGᶜᵖ = objective_value(model_ξ₂wGᶜᵖ)
+Lx_0,model_ξ₂_0ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,0,false)
+objective_value(model_ξ₂_0ᶜᵖ)
+mom_mat_Temp            = rec_mom_mat(A,t,Lx_0)
+eigvals(mom_mat_Temp)
 
 
-value.(LxG) == value.(LxwG)
-mom_matG        = rec_mom_mat(A,t,LxG)
-mom_matwG       = rec_mom_mat(A,t,LxwG)
-mom_matG == mom_matwG
+Lx_2,model_ξ₂_2ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,2.2,false)
+objective_value(model_ξ₂_2ᶜᵖ)
+## The G constriants make_G_con and make_G_con2 are the same upto permutation
+
+# Lx_Temp,model_ξ₂Tempᶜᵖ  = Computeξₜᶜᵖ(A, t, false,0,false)
+# mom_mat_Temp            = rec_mom_mat(A,t,Lx_Temp)
+# isposdef(mom_mat_Temp)
+# println([j for j in eigvals(mom_mat_Temp) if j < 0])
+
+
+
+# ξ₂Gᶜᵖ = objective_value(model_ξ₂Gᶜᵖ)
+# LxG2,model_ξ₂Gᶜᵖ2  = Computeξₜᶜᵖ(A, t, dag_con,2.2,xx_con)
+# ξ₂Gᶜᵖ2 = objective_value(model_ξ₂Gᶜᵖ2)
+#
+#
+#
+# LxwG,model_ξ₂wGᶜᵖ  = Computeξₜᶜᵖ(A, t, dag_con,1,xx_con)
+# ξ₂wGᶜᵖ = objective_value(model_ξ₂wGᶜᵖ)
+# ξ₂wGᶜᵖ = objective_value(model_ξ₂wGᶜᵖ)
+
+
+
+# model = Model(Mosek.Optimizer)
+# # A = ones(2,2)
+# n = size(A)[1]
+# t = 2
+# list_of_keys = make_mom_expo_keys(n, t)
+# @variable(model, Lx[list_of_keys])
+#
+# G_con                 = make_G_con(A,t,Lx)
+# G_con2                = make_G_con2(A,t,Lx)
+#
+# p = gen_tens_perm(n)
+#
+# G_con ==  G_con2
+
+
+
 ##
-mom_matG[2:(1+n),2:(1+n)]  ≈ A
-mom_matwG[2:(1+n),2:(1+n)]  ≈ A
-## Test the soulution
-@show eigvals(mom_matG)
-@show eigvals(mom_matwG)
+# value.(LxG) == value.(LxwG)
+# mom_matG        = rec_mom_mat(A,t,LxG)
+# mom_matwG       = rec_mom_mat(A,t,LxwG)
+# mom_matG == mom_matwG
+# ##
+# mom_matG[2:(1+n),2:(1+n)]  ≈ A
+# mom_matwG[2:(1+n),2:(1+n)]  ≈ A
+# ## Test the soulution
+# # @show eigvals(mom_matG)
+# # @show eigvals(mom_matwG)
+# #
+# @show [i  for i  in eigvals(mom_matwG) if i <  0]
+# @show [i  for i  in eigvals(mom_matG) if i <  0]
+#
+#
+# Lxf,model_ξ₂fᶜᵖ  = Computeξₜᶜᵖ(A, t, true,2,true)
+# ξ₂fᶜᵖ = objective_value(model_ξ₂fᶜᵖ)
+#
+#
+# function eval_keys(constraint)
+#     nonPSD_keys = []
+#     for key in keys(loc_con)
+#         if isposdef(value.(loc_con[(key)]))
+#             append!(nonPSD_keys,[key])
+#         end
+#     end
+#     return nonPSD_keys
+# end
+#
+# loc_con       = make_loc_con(A,t,Lxf)
+# nPSD_loc_keys = eval_keys(loc_con)
+#
+# xx_con        = make_xx_con(A,t,Lxf)
+# nPSD_xx_keys  = eval_keys(xx_con)
+#
+# dag_con       = make_dag_con(A,t,Lxf)
+# nPSD_xx_keys  = eval_keys(dag_con)
+#
+# weakG_con     = make_weakG_con(A,t,Lxf)
+# isposdef(weakG_con[1])
+#
+# G_con         = make_G_con(A,t,Lxf)
+# isposdef(G_con)
 
-minimum(eigvals(mom_matG))
-minimum(eigvals(mom_matwG))
-
-@show eigvals(mom_matG) .> eigvals(mom_matwG)
-
-isposdef(mom_matG)
-isposdef(mom_matwG)
-## Weak Constraints test
-# M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ) ⪰ 0, ℓ ∈ 0,1,t-deg(g)/2
-weakG_conG =  make_weakG_con(A,t,LxG)
-testPSD(value.(weakG_conG[1]))
-
-G_conwG =  make_G_con(A,t,LxwG)
-testPSD(value.(G_conwG[1]))
+# @show eigvals(mom_matG) .> eigvals(mom_matwG)
+#
+# isposdef(mom_matG)
+# isposdef(mom_matwG)
+# ## Weak Constraints test
+# # M⊗L([x]₌ₗ[x]₌ₗᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]₌ₗ[x]₌ₗᵀ) ⪰ 0, ℓ ∈ 0,1,t-deg(g)/2
+# weakG_conG  =  make_weakG_con(A,t,LxG)
+# wG_cG = value.(weakG_conG[1])
+# weakG_conwG =  make_weakG_con(A,t,LxwG)
+# wG_cwG  = value.(weakG_conwG[1])
+#
+# G_conwG =  make_G_con(A,t,LxwG)
+# G_cwG   = value.(G_conwG)
+# G_conG  =  make_G_con(A,t,LxG)
+# G_cG    = value.(G_conwG)
+#
+#
+# isposdef(G_cG)
+# isposdef(wG_cwG)
+# isposdef(wG_cG)
+# isposdef(G_cwG)
+#
+#
+# @show eigvals(G_cG)[1:5]
+# @show eigvals(wG_cwG)[1:5]
+# @show eigvals(wG_cG)[1:5]
+# @show eigvals(G_cwG)[1:5]
+#
+#
+#
+# G_conwG =  make_G_con(A,t,LxwG)
+# G_conG =  make_G_con(A,t,LxG)
+# isposdef(value.(G_conG))
+#
+#
+# nar = make_loc_con(A,t,LxG)
+#
+# for key in keys(nar)
+#     if ~isposdef(value.(nar[key]))
+#         println(key)
+#     end
+# end
+#
+# isposdef(value.(nar[(5, 8)]))
+#  eigvals(value.(nar[(5, 8)]))
+#
+#
+# xx_con = make_xx_con(A,t,LxG)
+# for key in keys(xx_con)
+#     isposdef()

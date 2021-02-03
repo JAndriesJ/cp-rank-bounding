@@ -133,7 +133,9 @@ function make_G_con(A,t,Lx)
     LMB_1ₜ₋₁           = index_to_var(Lx,LMBexp_1ₜ₋₁)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
 
     G_con = kron(A,LMBₜ₋₁) - LMB_1ₜ₋₁             # A⊗L([x]ₜ₋₁[x]ₜ₋₁ᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
-    return G_con
+
+    #p = gen_tens_perm(n,t-1)
+    return G_con#[p,p]
 end
 
 """M(G ⊗ L) ⪰ 0 constraints"""
@@ -142,7 +144,7 @@ function make_G_con2(M,t,Lx)
 
     LMBexp_00         = make_mon_expo_mat(n,0,false) #exponents of [x]₌₀[x]₌₀ᵀ
     LMBexp_10         = make_mon_expo_mat(n,(1,0),false) #exponents of [x]₌₁[x]₌₀ᵀ
-    LMBexp_01         = make_mon_expo_mat(n,(0,1),false)
+    LMBexp_01         = make_mon_expo_mat(n,(0,1),false) #exponents of [x]₌₀[x]₌₁ᵀ
     LMBexp_11         = make_mon_expo_mat(n,1,false) #exponents of [x]₌₁[x]₌₁ᵀ
 
     B_exp_00          = var_kron(LMBexp_11,LMBexp_00 )   # ([x]₌₁[x]₌₁ᵀ)⊗([x]₌₀[x]₌₀ᵀ)
@@ -159,10 +161,48 @@ function make_G_con2(M,t,Lx)
     A_11              = kron(M,index_to_var(Lx,LMBexp_11)) # M⊗L([x]₌₁[x]₌₁ᵀ)
 
     A                 =vcat(hcat(A_00,A_01),hcat(A_10,A_11 ))
-    GTensLCons = A - B             #???????????????????????????? M⊗L([x]ₜ[x]ₜᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗(([x]₌₀[x]₌₁)([x]₌₀[x]₌₁)ᵀ)
+    GTensLCons = A - B
     return GTensLCons
 end
 
+"""
+This function makes the permutation that links make_G_con and make_G_con2
+    only holds for t = 2
+"""
+function gen_tens_perm(n)
+    nar = [1 + j*(n+1) for j in 0:(n-1)]
+    li = []
+    for j in 1:(n*(n+1))
+        if !(j in nar)
+            append!(li,j)
+        end
+    end
+    return [nar;li]
+end
+
+function bseq(n,k)
+    li = Dict()
+    li[0] = [1]
+    for k_t in 0:k-1
+        li[k_t+1] = [(1+binomial(n+k_t,k_t)):binomial(n+k_t+1,k_t+1)...]
+    end
+    return li
+end
+
+
+function gen_tens_perm(n,k)
+    D = bseq(n,k)
+    S = binomial(n+k,k)
+    Li = []
+    for key in keys(D)
+        li = []
+        for j in 0:(n-1)
+            append!(li,D[key] .+ S*j)
+        end
+        Li = append!(Li,li)
+    end
+    return Li
+end
 
 
 
