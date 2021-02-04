@@ -1,7 +1,5 @@
 using LinearAlgebra # For the matrix manipulations and preprocessing.
 # using JuMP # For the optimization frame work.
-
-
 include("moment_utils.jl")
 
 # """This is just for testing puposes and sould not be used."""

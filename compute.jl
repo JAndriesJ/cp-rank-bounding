@@ -1,47 +1,36 @@
 using JuMP # For the optimization frame work.
-using MosekTools # The solver that we use.
 
-using GLPK
+solvers = ["Mosek","COSMO","Hypatia","SCS"]
+solver = solvers[1]
+# if !(solver  ∈  keys(Pkg.installed()))
+#     Pkg.add(solver)
+# end
+using MosekTools
+# The solver that we use.
+# eval(Meta.parse("using $solver"))
 
-# Pkg.add("COSMO")
-# using COSMO
-# Pkg.add("SDPA") # TODO make this work
-# using SDPA
 
-# using CDCS
-# using CSDP
-# using ProxSDP
-# using SCS
-
-# using Cbc
 include("constraints.jl")
 
 """This is where the ξₜᶜᵖ is calculated for matrix A """
 function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
     n = size(A)[1]
-    ## Begin making the model
-    model = Model(Mosek.Optimizer)
-    # model = Model(COSMO.Optimizer)
-    # model = Model(SDPA.Optimizer)
-    # Define all variables that occur in the moment matrix.
-    list_of_keys = make_mom_expo_keys(n, t)
+    #model = Model(Mosek.Optimizer) ## Begin making the model
+    model = eval(Meta.parse("Model($solver.Optimizer)"))
+    list_of_keys = make_mom_expo_keys(n, t) # Define variables in the moment matrix.
     @variable(model, Lx[list_of_keys] )
 ## Build the moment matrix and constrain it to be PSD.
     mom_matₜ_expo = make_mon_expo_mat(n,t,true)
     mom_matₜ      = index_to_var(Lx, mom_matₜ_expo)
-    @SDconstraint(model, mom_con, mom_matₜ >= zeros(size(mom_matₜ)))
+    #@SDconstraint(model, mom_con, mom_matₜ >= zeros(size(mom_matₜ)))
+    @constraint(model, Symmetric(mom_matₜ) in PSDCone())
 ## Second order Moment constraints
     mom_mat₌₁ = make_mon_expo_mat(n,1,false)
     Lx_mom_mat₌₁ = index_to_var(Lx,mom_mat₌₁)
-    @constraint(model, fix_con,Lx_mom_mat₌₁ .==  A)
-    # fix(Lx_mom_mat₌₁, A)
-
-    # for i ∈ 1:n, j ∈ 1:n
-    #     eᵢ = get_std_base_vec(n,i)
-    #     eⱼ = get_std_base_vec(n,j)
-    #     @constraint(model, Lx[eᵢ + eⱼ] ==  A[i,j])
-    #     #@constraint(model, Lx_mom_mat₌₁[i,j] ==  A[i,j])
-    # end
+    # @constraint(model, fix_con,Lx_mom_mat₌₁ .==  A)
+    for  i in 1:n, j in i:n
+        fix(Lx_mom_mat₌₁[i,j], A[i,j])
+    end
 ## Localizing g constraint
     loc_con = make_loc_con(A,t,Lx)
     Z_mat = zeros(size(loc_con[(1,1)]))
@@ -72,7 +61,8 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
         weakG_con = make_weakG_con(A,t,Lx)
         for key in keys(weakG_con)
             weakG_con_key = weakG_con[key]
-           @SDconstraint(model, weakG_con_key >= zeros(size(weakG_con_key)))
+            m = size(weakG_con_key)[1]
+           @SDconstraint(model, weakG_con_key >=  (zeros(m,m) )  ) # - eps()I(m)
         end
     end
     if GtensL == 2.1
@@ -107,6 +97,7 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
      # value.(Lx)
      # dual.(model)
      # round(objective_value(model), digits = 8)
+     # @show relative_gap(model
 end
 
 
