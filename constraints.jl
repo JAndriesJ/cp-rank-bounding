@@ -130,8 +130,8 @@ function make_G_con(A,t,Lx)
     LMBexp_1ₜ₋₁        = var_kron(LMBexp_1,LMBexpₜ₋₁)  #exponents of([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
     LMB_1ₜ₋₁           = index_to_var(Lx,LMBexp_1ₜ₋₁)   # L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
 
-    G_con = kron(A,LMBₜ₋₁) - LMB_1ₜ₋₁             # A⊗L([x]ₜ₋₁[x]ₜ₋₁ᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ)
-
+    G_con = kron(A,LMBₜ₋₁) - LMB_1ₜ₋₁             # A⊗L([x]ₜ₋₁[x]ₜ₋₁ᵀ) - L(([x]₌₁[x]₌₁ᵀ)⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
+                                                  #L((A - ([x]₌₁[x]₌₁ᵀ))⊗([x]ₜ₋₁[x]ₜ₋₁ᵀ))
     #p = gen_tens_perm(n,t-1)
     return G_con#[p,p]
 end

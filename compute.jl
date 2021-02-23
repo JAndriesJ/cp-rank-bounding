@@ -12,11 +12,11 @@ using MosekTools
 
 include("constraints.jl")
 
-"""This is where the ξₜᶜᵖ is calculated for matrix A """
-function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
+function Modelξₜᶜᵖ(A,t,isDag,GtensL,isXX)
     n = size(A)[1]
-    #model = Model(Mosek.Optimizer) ## Begin making the model
-    model = eval(Meta.parse("Model($solver.Optimizer)"))
+    # model = Model(Mosek.Optimizer) ## Begin making the model
+    # model = eval(Meta.parse("Model($solver.Optimizer)"))
+    model = Model()
     list_of_keys = make_mom_expo_keys(n, t) # Define variables in the moment matrix.
     @variable(model, Lx[list_of_keys] )
 ## Build the moment matrix and constrain it to be PSD.
@@ -62,23 +62,34 @@ function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
         for key in keys(weakG_con)
             weakG_con_key = weakG_con[key]
             m = size(weakG_con_key)[1]
-           @SDconstraint(model, weakG_con_key >=  (zeros(m,m) )  ) # - eps()I(m)
+           # @SDconstraint(model, weakG_con_key >=  zeros(m,m)   )
+           @constraint(model, Symmetric(weakG_con_key) in PSDCone())
         end
     end
     if GtensL == 2.1
         println("----------------G-constraints are active")
         G_con                 = make_G_con(A,t,Lx)
-        @SDconstraint(model, G_con >= zeros(size(G_con)))
+        #@SDconstraint(model, G_con >= zeros(size(G_con)))
+        @constraint(model, Symmetric(G_con) in PSDCone())
     end
 
     if GtensL == 2.2
         println("----------------G-constraints are active")
         G_con                 = make_G_con2(A,t,Lx)
-        @SDconstraint(model, G_con >= zeros(size(G_con)))
+        #@SDconstraint(model, G_con >= zeros(size(G_con)))
+        @constraint(model, Symmetric(G_con) in PSDCone())
     end
 
-    #  Set objective
-    @objective(model, Min, Lx[zeros(n)] )
+##  Set objective
+    @objective(model, Min, Lx[zeros(n)])
+    return model
+end
+
+
+"""This is where the ξₜᶜᵖ is calculated for matrix A """
+function Computeξₜᶜᵖ(A,t,isDag,GtensL,isXX)
+    model = Modelξₜᶜᵖ(A,t,isDag,GtensL,isXX)
+
     # optimize
     optimize!(model)
 

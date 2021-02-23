@@ -16,17 +16,27 @@ function quick_load_mat(n::Integer)
     return loadMatfromtxt(loadPath)
 end
 
-A = quick_load_mat(6)
+A = quick_load_mat(4)
+#A = A + ones(9,9)*eps()
 # A = rand(4,4)
 # A = A*tra(A)
 
 n = size(A)[1]
 t  = 2
 
+Lx_0,model_ξ₂_0ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,0,false)
+objective_value(model_ξ₂_0ᶜᵖ)
+
 Lx_1,model_ξ₂_1ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,1,false)
 objective_value(model_ξ₂_1ᶜᵖ)
 
-@show relative_gap(model_ξ₂_1ᶜᵖ)
+Lx_21,model_ξ₂_21ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,2.1,false)
+objective_value(model_ξ₂_21ᶜᵖ)
+
+Lx_22,model_ξ₂_22ᶜᵖ  = Computeξₜᶜᵖ(A, t, false,2.2,false)
+objective_value(model_ξ₂_22ᶜᵖ)
+
+
 
 function run_tests()
     a,b,c,d,e = (0,0,0,0,0)
@@ -227,6 +237,13 @@ end
 
 
 
+
+# model = eval(Meta.parse("Model(Mosek.Optimizer)"))
+# list_of_keys = make_mom_expo_keys(n, t) # Define variables in the moment matrix.
+# @variable(model, Lx[list_of_keys] )
+# G_con = make_G_con(A,t,Lx)
+# G_con2 = make_G_con2(A,t,Lx)
+# wG_con = make_G_con2(A,t,Lx)
 
 # A = [1.0 0.5 ; 0.5 1.0]
 #
